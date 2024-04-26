@@ -4,7 +4,7 @@ import hmac
 import os
 
 st.set_page_config(
-    page_title="發明展新聞稿產生器",
+    page_title="CIIS 新聞稿產生器",
     page_icon="💡",
 )
 
@@ -46,7 +46,7 @@ SYSTEM_PROMPT = """
 """
 
 if "openai_model" not in st.session_state:
-    st.session_state["openai_model"] = "gpt-3.5-turbo"
+    st.session_state["openai_model"] = "gpt-4-turbo"
 
 if "messages" not in st.session_state:
     st.session_state.messages = [{"role": "system", "content": SYSTEM_PROMPT}]
@@ -70,15 +70,15 @@ def llm(input_text):
     return stream
 
 
-st.title("發明展新聞稿產生器")
+st.title("💡CIIS 新聞稿產生器")
 
-# 使用 Streamlit 創建表單
+# 使用 Streamlit 以更禮貌的方式創建表單
 with st.form(key="my_form"):
-    input_text = st.text_area(label="請輸入任何內容", height=100)
-    submit_button = st.form_submit_button(label="讓我看看你能生出什麼")
+    input_text = st.text_area(label="請輸入您希望生成的新聞稿內容", height=100)
+    submit_button = st.form_submit_button(label="請點擊以生成新聞稿")
 
-# 按下按鈕後執行特定的函數，並顯示結果
+# 在按下按鈕後，以禮貌的方式處理輸入，並顯示結果
 if submit_button:
     st.session_state.press = llm(input_text)
-    st.info(f"*這不就來了嗎*")
+    st.info(f"*您的新聞稿已成功生成*")
     st.write_stream(st.session_state.press)
