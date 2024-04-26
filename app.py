@@ -34,7 +34,7 @@ def check_password():
         return True
 
     # Show input for password.
-    st.title("登入")
+    st.title("請登入")
     st.text_input(
         "密碼",
         type="password",
@@ -89,7 +89,7 @@ def llm(input_text):
             {"role": m["role"], "content": m["content"]}
             for m in st.session_state.messages
         ],
-        temperature=0.8,
+        temperature=0.7,
         stream=True,
     )
     return stream
