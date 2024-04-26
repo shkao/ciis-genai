@@ -5,6 +5,10 @@ cat <<EOF > ~/.streamlit/credentials.toml
 email="hushkao@gmail.com"
 EOF
 
+cat <<EOF > ~/.streamlit/secrets.toml
+password="wu0202"
+EOF
+
 cat <<EOF > ~/.streamlit/config.toml
 [server]
 headless=true
