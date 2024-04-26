@@ -1,1 +1,1 @@
-# ciis-genai
+# CIIS Application for Generative AI Tasks
