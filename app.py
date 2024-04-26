@@ -46,8 +46,8 @@ def check_password():
     return False
 
 
-# if not check_password():
-#     st.stop()  # Do not continue if check_password is not True.
+if not check_password():
+    st.stop()  # Do not continue if check_password is not True.
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
