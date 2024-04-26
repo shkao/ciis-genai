@@ -37,7 +37,7 @@ def check_password():
 if not check_password():
     st.stop()  # Do not continue if check_password is not True.
 
-client = OpenAI(api_key=os.getenv["OPENAI_API_KEY"])
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 SYSTEM_PROMPT = """
 你是一位公司專業發言人，你需要針對公司給你的內容，運用自己獨特風格發表專業的公司新聞稿，向社會大眾聲明你公司提出的內容。
