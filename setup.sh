@@ -1,15 +1,15 @@
 mkdir -p ~/.streamlit/
 
-cat << EOF > ~/.streamlit/credentials.toml
+cat <<EOF > ~/.streamlit/credentials.toml
 [general]
-email = "hushkao@gmail.com"
+email="hushkao@gmail.com"
 EOF
 
-cat << EOF > ~/.streamlit/config.toml
+cat <<EOF > ~/.streamlit/config.toml
 [server]
-headless = true
+headless=true
 enableCORS=false
-port = \$PORT
+port=$PORT
 
 [theme]
 primaryColor="#F63366"
