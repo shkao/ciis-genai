@@ -6,7 +6,7 @@ email="hushkao@gmail.com"
 EOF
 
 cat <<EOF > ~/.streamlit/secrets.toml
-password=$PASSWORD
+password="$PASSWORD"
 EOF
 
 cat <<EOF > ~/.streamlit/config.toml
