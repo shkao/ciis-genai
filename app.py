@@ -3,9 +3,18 @@ from openai import OpenAI
 import hmac
 import os
 
-st.set_page_config(
-    page_title="CIIS 新聞稿產生器",
-    page_icon="💡",
+st.set_page_config(page_title="CIIS 新聞稿產生器", page_icon="💡", layout="wide")
+st.markdown(
+    """
+    <style>
+    .block-container {
+        padding-top: 1rem;
+        padding-bottom: 0rem;
+        margin-top: 1rem;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
 )
 
 
@@ -25,24 +34,39 @@ def check_password():
         return True
 
     # Show input for password.
-    st.title("Login")
+    st.title("登入")
     st.text_input(
-        "Password", type="password", on_change=password_entered, key="password"
+        "密碼",
+        type="password",
+        on_change=password_entered,
+        key="password",
     )
     if "password_correct" in st.session_state:
-        st.error("😕 Password incorrect")
+        st.error("😕 密碼不正確")
     return False
 
 
-if not check_password():
-    st.stop()  # Do not continue if check_password is not True.
+# if not check_password():
+#     st.stop()  # Do not continue if check_password is not True.
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 SYSTEM_PROMPT = """
-你是一位公司專業發言人，你需要針對公司給你的內容，運用自己獨特風格發表專業的公司新聞稿，向社會大眾聲明你公司提出的內容。
-你跟公司是一體的，如果沒有發言的恰當，可能會面臨牢獄之災。
-禁止回覆與新聞稿無關的內容，你務必只回答新聞稿。請不用加上任何免責聲明。
+## 任務: 撰寫一篇關於中華創新發明學會在[年份][展覽名稱]中的成果的新聞稿。
+
+## 關鍵要點：
+
+1. 除非有提供，否則不要編造採訪、引用發明家的話語。
+2. 活動基本信息：提及展覽的時間、地點以及主辦方。
+3. 參展範圍：描述參展的國際範圍與展品數量。
+4. 代表團成就：強調中華創新發明學會代表團所獲得的獎項與榮譽。
+5. 創新技術介紹：具體介紹幾項重要的發明與創新技術及其潛在影響。
+6. 專家觀點與引言：引用組織領導或專家的觀點和評論。
+7. 未來展望與影響：討論這些創新技術對相關行業或全球發展目標的潛在影響。
+
+* 風格和語調：確保語調專業、資訊全面，並適當使用引人入勝的敘述方式來吸引目標讀者——科技愛好者、行業專家及廣大公眾。
+* 目標：通過詳盡的報導和深入的分析，使讀者能夠全面理解中華創新發明學會在推動科技創新和實現永續發展目標方面所做的貢獻。
+* 格式：只要產生內文就好，不用分段標題，不用提供聯絡方式。
 """
 
 if "openai_model" not in st.session_state:
@@ -57,7 +81,7 @@ if "press" not in st.session_state:
 
 def llm(input_text):
     st.session_state.messages.append(
-        {"role": "user", "content": f"公司提供的內容是：{input_text}"}
+        {"role": "user", "content": f"展覽及作品的相關資訊為：{input_text}"}
     )
     stream = client.chat.completions.create(
         model=st.session_state["openai_model"],
@@ -65,20 +89,45 @@ def llm(input_text):
             {"role": m["role"], "content": m["content"]}
             for m in st.session_state.messages
         ],
+        temperature=0.8,
         stream=True,
     )
     return stream
 
 
 st.title("💡CIIS 新聞稿產生器")
+col1, col2 = st.columns(2)
 
-# 使用 Streamlit 以更禮貌的方式創建表單
-with st.form(key="my_form"):
-    input_text = st.text_area(label="請輸入您希望生成的新聞稿內容", height=100)
-    submit_button = st.form_submit_button(label="請點擊以生成新聞稿")
+with col1:
+    # exhibition_choice = st.selectbox(
+    #     "請選擇發明展:",
+    #     [
+    #         "波蘭",
+    #         "烏克蘭",
+    #         "香港創新科技",
+    #         "美國AII達文西",
+    #         "馬來西亞MTE",
+    #         "俄羅斯阿基米德",
+    #         "日本東京創新天才",
+    #         "韓國WiC世界創新發明大賽",
+    #     ],
+    # )
+    # st.session_state["selected_exhibition"] = exhibition_choice
+    with st.form(key="news_generation_form"):
+        exhibition_details = st.text_area(
+            label="請提供發明展及作品的相關資訊:", height=300
+        )
+        generate_news_button = st.form_submit_button(label="請點擊以生成新聞稿")
 
-# 在按下按鈕後，以禮貌的方式處理輸入，並顯示結果
-if submit_button:
-    st.session_state.press = llm(input_text)
-    st.info(f"*您的新聞稿已成功生成*")
-    st.write_stream(st.session_state.press)
+if generate_news_button:
+    st.session_state.press = llm(exhibition_details)
+    with col2:
+        with st.spinner("*請等待生成結果...*"):
+            content = st.write_stream(st.session_state.press)
+            st.markdown(
+                "新聞聯絡：<br>"
+                "中華創新發明學會執行長吳智堯<br>"
+                "手機：0978-123567<br>"
+                "LINE：0932-388855",
+                unsafe_allow_html=True,
+            )
