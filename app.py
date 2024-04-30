@@ -1,21 +1,8 @@
 import streamlit as st
 from openai import OpenAI
+import pandas as pd
 import hmac
 import os
-
-st.set_page_config(page_title="CIIS 新聞稿產生器", page_icon="💡", layout="wide")
-st.markdown(
-    """
-    <style>
-    .block-container {
-        padding-top: 1rem;
-        padding-bottom: 0rem;
-        margin-top: 1rem;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
 
 
 def check_password():
@@ -49,8 +36,6 @@ def check_password():
 if not check_password():
     st.stop()  # Do not continue if check_password is not True.
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
 SYSTEM_PROMPT = """
 ## 任務: 撰寫一篇關於中華創新發明學會在[年份][展覽名稱]中的成果的新聞稿。
 
@@ -80,6 +65,8 @@ if "press" not in st.session_state:
 
 
 def llm(input_text):
+    client = OpenAI(api_key=os.getenv("OPENAI_CIIS_API_KEY"))
+
     st.session_state.messages.append(
         {"role": "user", "content": f"展覽及作品的相關資訊為：{input_text}"}
     )
@@ -95,6 +82,27 @@ def llm(input_text):
     return stream
 
 
+def monthly_total_cost():
+    current_year_month = pd.Timestamp.now().strftime("%Y%m")
+    filename = f"api_usage/{current_year_month}.csv"
+    df = pd.read_csv(filename)
+    total_cost = int(df["Total Cost"].sum() * 10)
+    return total_cost
+
+
+st.set_page_config(page_title="CIIS 新聞稿產生器", page_icon="💡", layout="wide")
+st.markdown(
+    """
+    <style>
+    .block-container {
+        padding-top: 1rem;
+        padding-bottom: 0rem;
+        margin-top: 1rem;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 st.title("💡CIIS 新聞稿產生器")
 col1, col2 = st.columns(2)
 
@@ -118,16 +126,25 @@ with col1:
             label="請提供發明展及作品的相關資訊:", height=300
         )
         generate_news_button = st.form_submit_button(label="請點擊以生成新聞稿")
+    st.info(f"本月使用量: {monthly_total_cost()}元。")
 
-if generate_news_button:
-    st.session_state.press = llm(exhibition_details)
-    with col2:
+with col2:
+    if generate_news_button:
+        contact_info = (
+            "新聞聯絡：<br>"
+            "中華創新發明學會執行長吳智堯<br>"
+            "手機：0978-123567<br>"
+            "LINE：0932-388855"
+        )
+        st.session_state.press = llm(exhibition_details)
         with st.spinner("*請等待生成結果...*"):
             content = st.write_stream(st.session_state.press)
-            st.markdown(
-                "新聞聯絡：<br>"
-                "中華創新發明學會執行長吳智堯<br>"
-                "手機：0978-123567<br>"
-                "LINE：0932-388855",
-                unsafe_allow_html=True,
-            )
+            st.markdown(contact_info, unsafe_allow_html=True)
+
+        full_content = content + "\r\n\r\n" + contact_info.replace("<br>", "\r\n")
+        st.download_button(
+            label="下載新聞稿",
+            data=full_content.encode("utf-8"),
+            file_name=f"新聞稿_{pd.Timestamp.now().strftime('%Y%m%d%H%M')}.txt",
+            mime="text/plain",
+        )
