@@ -5,6 +5,21 @@ import hmac
 import os
 
 
+st.set_page_config(page_title="CIIS 新聞稿產生器", page_icon="💡", layout="wide")
+st.markdown(
+    """
+    <style>
+    .block-container {
+        padding-top: 1rem;
+        padding-bottom: 0rem;
+        margin-top: 1rem;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+
 def check_password():
     """Returns `True` if the user had the correct password."""
 
@@ -33,8 +48,8 @@ def check_password():
     return False
 
 
-# if not check_password():
-#     st.stop()  # Do not continue if check_password is not True.
+if not check_password():
+    st.stop()  # Do not continue if check_password is not True or if not running locally.
 
 SYSTEM_PROMPT = """
 你是一位專業的記者，請撰寫一篇新聞稿，介紹中華創新發明學會(CIIS)在特定發明展中的表現。請確保不創造虛構的採訪或引用。新聞稿應包括以下要點：
@@ -86,43 +101,29 @@ def monthly_total_cost():
     return total_cost
 
 
-st.set_page_config(page_title="CIIS 新聞稿產生器", page_icon="💡", layout="wide")
-st.markdown(
-    """
-    <style>
-    .block-container {
-        padding-top: 1rem;
-        padding-bottom: 0rem;
-        margin-top: 1rem;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
 st.title("💡CIIS 新聞稿產生器")
 col1, col2 = st.columns(2)
 
 with col1:
-    # exhibition_choice = st.selectbox(
-    #     "請選擇發明展:",
-    #     [
-    #         "波蘭",
-    #         "烏克蘭",
-    #         "香港創新科技",
-    #         "美國AII達文西",
-    #         "馬來西亞MTE",
-    #         "俄羅斯阿基米德",
-    #         "日本東京創新天才",
-    #         "韓國WiC世界創新發明大賽",
-    #     ],
-    # )
-    # st.session_state["selected_exhibition"] = exhibition_choice
+    exhibition_choice = st.selectbox(
+        "請選擇發明展:",
+        [
+            "波蘭",
+            "烏克蘭",
+            "香港創新科技",
+            "美國AII達文西",
+            "馬來西亞MTE",
+            "俄羅斯阿基米德",
+            "日本東京創新天才",
+            "韓國WiC世界創新發明大賽",
+        ],
+    )
+    st.session_state["selected_exhibition"] = exhibition_choice
     with st.form(key="news_generation_form"):
-        exhibition_details = st.text_area(
-            label="請提供發明展及作品的相關資訊:", height=300
-        )
+        exhibition_details = st.text_area(label="請提供發明展的相關資訊:", height=60)
+        invention_details = st.text_area(label="請提供得獎作品的相關資訊:", height=250)
         generate_news_button = st.form_submit_button(label="請點擊以生成新聞稿")
-    st.info(f"本月預估費用: {monthly_total_cost()}元。")
+    # st.info(f"本月預估費用: {monthly_total_cost()}元。")
 
 with col2:
     if generate_news_button:
