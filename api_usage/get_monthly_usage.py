@@ -124,11 +124,9 @@ def main():
     cost_per_output_token = COST_PER_OUTPUT_TOKEN * USD_TO_TWD_RATE
 
     filename = f"{YEAR:04d}{MONTH:02d}.csv"
-    if not os.path.exists(filename):
-        process_month_usage(
-            TOKEN, ORG_ID, YEAR, MONTH, cost_per_input_token, cost_per_output_token
-        )
-
+    process_month_usage(
+        TOKEN, ORG_ID, YEAR, MONTH, cost_per_input_token, cost_per_output_token
+    )
     summarize_total_cost(YEAR, MONTH)
 
 
