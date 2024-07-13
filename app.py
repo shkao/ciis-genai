@@ -163,7 +163,7 @@ with col1:
         exhibition_details = st.text_area(
             label="發明展的相關資訊:", height=100, value=exhibition_desc
         )
-        invention_details = st.text_area(label="請提供得獎作品的相關資訊:", height=320)
+        invention_details = st.text_area(label="請提供得獎作品的相關資訊:", height=250)
 
         # Button to generate news
         generate_news_button = st.form_submit_button(label="請點擊以生成新聞稿")
