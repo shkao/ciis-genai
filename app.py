@@ -1,11 +1,11 @@
-import os
-import json
-import hmac
 import pandas as pd
 import streamlit as st
 from openai import OpenAI
+import hmac
+import os
+import json
 
-
+# Configure the Streamlit page
 st.set_page_config(page_title="CIIS 新聞稿產生器", page_icon="💡", layout="wide")
 st.markdown(
     """
@@ -21,14 +21,15 @@ st.markdown(
 )
 
 
+# Function to check the password
 def check_password():
-    """Returns `True` if the user had the correct password."""
+    """Returns `True` if the user has the correct password."""
 
     def password_entered():
         """Checks whether a password entered by the user is correct."""
         if hmac.compare_digest(st.session_state["password"], st.secrets["password"]):
             st.session_state["password_correct"] = True
-            del st.session_state["password"]  # Don't store the password.
+            del st.session_state["password"]
         else:
             st.session_state["password_correct"] = False
 
@@ -49,9 +50,11 @@ def check_password():
     return False
 
 
+# Stop execution if password is not correct
 if not check_password():
-    st.stop()  # Do not continue if check_password is not True or if not running locally.
+    st.stop()
 
+# System prompt for the OpenAI model
 SYSTEM_PROMPT = """
 你是一位專業記者，請撰寫一篇1000字以上的新聞稿，介紹中華創新發明學會(CIIS)在某發明展中的表現。請確保不創造虛構的採訪或引用，並包含以下要點：
 
@@ -65,6 +68,7 @@ SYSTEM_PROMPT = """
 文章格式為一篇完整的內文，無需分段標題或聯絡方式。
 """
 
+# Initialize session state variables
 if "openai_model" not in st.session_state:
     st.session_state["openai_model"] = "gpt-4o"
 
@@ -75,6 +79,7 @@ if "press" not in st.session_state:
     st.session_state.press = ""
 
 
+# Function to interact with the OpenAI API
 def llm(exhibition_details, invention_details):
     client = OpenAI(api_key=os.getenv("OPENAI_CIIS_API_KEY"))
 
@@ -97,6 +102,7 @@ def llm(exhibition_details, invention_details):
     return stream
 
 
+# Function to calculate monthly total cost
 def monthly_total_cost():
     current_year_month = pd.Timestamp.now().strftime("%Y%m")
     filename = f"api_usage/{current_year_month}.csv"
@@ -105,6 +111,7 @@ def monthly_total_cost():
     return total_cost
 
 
+# Function to get event description from a JSON file
 def get_event_description(event_name):
     try:
         with open("exhibitions/exhibition_desc.json", "r", encoding="utf-8") as file:
@@ -121,23 +128,30 @@ def get_event_description(event_name):
         return f"An error occurred: {str(e)}"
 
 
+# Title of the Streamlit app
 st.title("💡CIIS 新聞稿產生器")
+
+# Create two columns for layout
 col1, col2 = st.columns(2)
 
 with col1:
+    # Load exhibition data
     exhibition_data = pd.read_csv("exhibitions/exhibition_data.csv")
     exhibition_data["Date_simplified"] = pd.to_datetime(
         exhibition_data["Date"].str.extract(r"(\d{4}/\d{2}/\d{2})")[0]
     ) + pd.DateOffset(months=1)
 
+    # Filter upcoming exhibitions
     upcoming_exhibitions = exhibition_data.query(
         "Date_simplified >= @pd.Timestamp.now()"
     )["Event Name"].unique()
 
+    # Dropdown to select an exhibition
     exhibition_choice = st.selectbox("請選擇發明展:", upcoming_exhibitions)
     st.session_state["selected_exhibition"] = exhibition_choice
 
     with st.form(key="news_generation_form"):
+        # Get selected exhibition information
         exhibition_info = exhibition_data.query("`Event Name` == @exhibition_choice")
         exhibition_desc = get_event_description(exhibition_choice)
         if not exhibition_info.empty:
@@ -145,15 +159,18 @@ with col1:
                 f"時間: {exhibition_info.iloc[0]['Date']}\n{exhibition_desc}"
             )
 
+        # Text areas to input exhibition and invention details
         exhibition_details = st.text_area(
             label="發明展的相關資訊:", height=100, value=exhibition_desc
         )
         invention_details = st.text_area(label="請提供得獎作品的相關資訊:", height=320)
 
+        # Button to generate news
         generate_news_button = st.form_submit_button(label="請點擊以生成新聞稿")
 
 with col2:
     if generate_news_button:
+        # Contact information
         contact_info = (
             "新聞聯絡：<br>"
             "中華創新發明學會執行長吳智堯<br>"
@@ -161,11 +178,13 @@ with col2:
             "LINE：0932-388855"
         )
 
+        # Generate news using OpenAI API
         st.session_state.press = llm(exhibition_details, invention_details)
         with st.spinner("*請等待生成結果...*"):
             content = st.write_stream(st.session_state.press)
             st.markdown(contact_info, unsafe_allow_html=True)
 
+        # Prepare content for download
         full_content = content + "\r\n\r\n" + contact_info.replace("<br>", "\r\n")
         st.download_button(
             label="下載新聞稿",
